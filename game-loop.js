@@ -11,6 +11,7 @@
  */
 import { randomUUID, randomInt } from 'crypto';
 import { addMatchEventListener, MATCH_EVENTS } from './event-manager.js';
+import { writeMessageToPlayer } from './socket-manager.js';
 
 const matches = {};
 const gridMap = {
@@ -36,6 +37,7 @@ class Match {
         this.turn = randomInt(99999) % 2 === 0 ? p1 : p2;
         this.movesCounter = 0;
         this.grid = [["", "", ""], ["", "", ""], ["", "", ""]];
+        // console.log("created match for", p1, p2);
     }
 
     toggleTurn() {
@@ -92,11 +94,14 @@ class Match {
 
 export function newMatch(p1, p2) {
     const m = new Match(p1, p2);
+    writeMessageToPlayer(p1, JSON.stringify({ "event": "MATCH_START", "opponent": p2 }));
+    writeMessageToPlayer(p2, JSON.stringify({ "event": "MATCH_START", "opponent": p1 }));
     if (matches[m.matchId]) {
         newMatch(p1, p2);
     } else {
         matches[m.matchId] = m;
     }
+    console.log(`created match: ${m.matchId} for pl: ${p1}, p2: ${p2}`);
     return m.matchId;
 }
 
